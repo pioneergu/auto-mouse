@@ -10,6 +10,7 @@ egui = "0.26.2"
 
 # 마우스 제어
 windows = { version = "0.52", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse"] }
+# windows = { version = "0.52", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Threading"] }
 
 # 설정 관리
 serde = { version = "1.0", features = ["derive"] }
@@ -22,6 +23,6 @@ anyhow = "1.0"
 log = "0.4"
 env_logger = "0.10"
 dirs = "5.0"
-
+# 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser", "processthreadsapi"] }

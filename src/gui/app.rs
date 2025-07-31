@@ -13,7 +13,26 @@ pub struct AutoMouseApp {
 }
 
 impl AutoMouseApp {
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // egui가 한글을 지원하도록 폰트를 설정합니다.
+        let mut fonts = egui::FontDefinitions::default();
+
+        // D2Coding 폰트를 추가합니다.
+        // 프로젝트 루트에 assets/D2Coding.ttf 파일을 위치시켜야 합니다.
+        fonts.font_data.insert(
+            "d2coding".to_owned(),
+            egui::FontData::from_static(include_bytes!("../../assets/D2Coding.ttf")),
+        );
+
+        // 기본 폰트(Proportional)와 고정폭 폰트(Monospace) 패밀리에
+        // D2Coding을 최우선으로 추가합니다.
+        fonts.families.entry(egui::FontFamily::Proportional).or_default().insert(0, "d2coding".to_owned());
+        fonts.families.entry(egui::FontFamily::Monospace).or_default().insert(0, "d2coding".to_owned());
+
+        // egui 컨텍스트에 폰트 설정을 적용합니다.
+        cc.egui_ctx.set_fonts(fonts);
+
+
         let settings = Settings::load().unwrap_or_default();
         let mouse_controller = Arc::new(Mutex::new(MouseController::new()));
         
@@ -44,7 +63,7 @@ impl eframe::App for AutoMouseApp {
         self.update_status();
         
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Auto Mouse - 자리비움 방지");
+            ui.heading("Stay Wake...");
             ui.separator();
             
             // 상태 표시
@@ -52,19 +71,19 @@ impl eframe::App for AutoMouseApp {
             ui.separator();
             
             // 설정 섹션
-            ui.heading("설정");
+            ui.heading("Settings");
             self.settings_ui(ui);
             
             ui.separator();
             
             // 제어 섹션
-            ui.heading("제어");
+            ui.heading("Controls");
             self.control_ui(ui);
             
             ui.separator();
             
             // 통계 섹션
-            ui.heading("통계");
+            ui.heading("Statistics");
             self.stats_ui(ui);
         });
         
