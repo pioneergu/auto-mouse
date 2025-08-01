@@ -4,7 +4,7 @@ mod gui;
 mod mouse;
 mod config;
 
-use eframe::{egui, NativeOptions};
+use eframe::egui;
 use gui::AutoMouseApp;
 
 fn main() -> Result<(), eframe::Error> {
@@ -14,8 +14,8 @@ fn main() -> Result<(), eframe::Error> {
     // GUI 애플리케이션 실행
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size(egui::vec2(450.0, 350.0))
-            .with_min_inner_size(egui::vec2(400.0, 300.0)),
+            .with_inner_size(egui::vec2(300.0, 300.0))
+            .with_min_inner_size(egui::vec2(250.0, 250.0)),
         ..Default::default()
     };
     

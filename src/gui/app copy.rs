@@ -10,7 +10,6 @@ pub struct AutoMouseApp {
     is_active: bool,
     last_activity: Instant,
     status_text: String,
-    is_collapsed: bool,
 }
 
 impl AutoMouseApp {
@@ -43,7 +42,6 @@ impl AutoMouseApp {
             is_active: false,
             last_activity: Instant::now(),
             status_text: "대기 중".to_string(),
-            is_collapsed: false,
         }
     }
     
@@ -61,7 +59,7 @@ impl AutoMouseApp {
 }
 
 impl eframe::App for AutoMouseApp {
-    fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.update_status();
         
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -71,8 +69,22 @@ impl eframe::App for AutoMouseApp {
             // 상태 표시
             ui.label(format!("상태: {}", self.status_text));
             ui.separator();
-
-            self.collapsible_ui(ui, ctx);
+            
+            // 설정 섹션
+            ui.heading("Settings");
+            self.settings_ui(ui);
+            
+            ui.separator();
+            
+            // 제어 섹션
+            ui.heading("Controls");
+            self.control_ui(ui);
+            
+            ui.separator();
+            
+            // 통계 섹션
+            ui.heading("Statistics");
+            self.stats_ui(ui);
         });
         
         // 자동 업데이트
@@ -81,39 +93,6 @@ impl eframe::App for AutoMouseApp {
 }
 
 impl AutoMouseApp {
-    fn collapsible_ui(&mut self, ui: &mut Ui, ctx: &Context) {
-        let button_text = if self.is_collapsed { "▼ 확대" } else { "▲ 축소" };
-        if ui.button(button_text).clicked() {
-            self.is_collapsed = !self.is_collapsed;
-
-            // 창 크기를 상태에 맞게 조절합니다.
-            let new_size = if self.is_collapsed {
-                egui::vec2(300.0, 100.0) // 축소되었을 때 크기
-            } else {
-                egui::vec2(300.0, 400.0) // 확대되었을 때 크기
-            };
-            ctx.send_viewport_cmd(egui::viewport::ViewportCommand::InnerSize(new_size));
-        }
-
-        if !self.is_collapsed {
-            // Expanded view: show all other sections
-            ui.separator();
-
-            ui.heading("Settings");
-            self.settings_ui(ui);
-
-            ui.separator();
-
-            ui.heading("Controls");
-            self.control_ui(ui);
-
-            ui.separator();
-
-            ui.heading("Statistics");
-            self.stats_ui(ui);
-        }
-    }
-
     fn settings_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             ui.label("동작 간격 (초):");
