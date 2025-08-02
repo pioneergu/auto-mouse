@@ -11,6 +11,7 @@ pub struct AutoMouseApp {
     last_activity: Instant,
     status_text: String,
     is_collapsed: bool,
+    last_collapsed_state: bool,
 }
 
 impl AutoMouseApp {
@@ -43,7 +44,8 @@ impl AutoMouseApp {
             is_active: false,
             last_activity: Instant::now(),
             status_text: "대기 중".to_string(),
-            is_collapsed: false,
+            is_collapsed: true,
+            last_collapsed_state: true,
         }
     }
     
@@ -61,7 +63,7 @@ impl AutoMouseApp {
 }
 
 impl eframe::App for AutoMouseApp {
-    fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.update_status();
         
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -73,7 +75,25 @@ impl eframe::App for AutoMouseApp {
             ui.separator();
 
             self.collapsible_ui(ui, ctx);
+            
+            // 창 크기를 콘텐츠에 맞게 자동 조정
+            ui.allocate_space(ui.available_size());
         });
+        
+        // 축소/확대 상태가 변경될 때 창 크기 자동 조정
+        if self.should_resize() {
+            ctx.send_viewport_cmd(egui::viewport::ViewportCommand::Resizable(true));
+            
+            // 상태에 따른 적절한 창 크기 설정
+            let target_size = if self.is_collapsed {
+                egui::vec2(300.0, 200.0) // 축소 시 크기
+            } else {
+                egui::vec2(300.0, 450.0) // 확대 시 크기
+            };
+            
+            ctx.send_viewport_cmd(egui::viewport::ViewportCommand::InnerSize(target_size));
+            self.last_collapsed_state = self.is_collapsed;
+        }
         
         // 자동 업데이트
         ctx.request_repaint_after(Duration::from_secs(1));
@@ -81,22 +101,21 @@ impl eframe::App for AutoMouseApp {
 }
 
 impl AutoMouseApp {
-    fn collapsible_ui(&mut self, ui: &mut Ui, ctx: &Context) {
+    fn collapsible_ui(&mut self, ui: &mut Ui, _ctx: &Context) {
+        // Controls는 항상 표시 (맨 위로 이동)
+        ui.heading("Controls");
+        self.control_ui(ui);
+        
+        ui.separator();
+
+        // 확대/축소 버튼
         let button_text = if self.is_collapsed { "▼ 확대" } else { "▲ 축소" };
         if ui.button(button_text).clicked() {
             self.is_collapsed = !self.is_collapsed;
-
-            // 창 크기를 상태에 맞게 조절합니다.
-            let new_size = if self.is_collapsed {
-                egui::vec2(300.0, 100.0) // 축소되었을 때 크기
-            } else {
-                egui::vec2(300.0, 400.0) // 확대되었을 때 크기
-            };
-            ctx.send_viewport_cmd(egui::viewport::ViewportCommand::InnerSize(new_size));
         }
 
         if !self.is_collapsed {
-            // Expanded view: show all other sections
+            // Expanded view: show other sections
             ui.separator();
 
             ui.heading("Settings");
@@ -104,14 +123,12 @@ impl AutoMouseApp {
 
             ui.separator();
 
-            ui.heading("Controls");
-            self.control_ui(ui);
-
-            ui.separator();
-
             ui.heading("Statistics");
             self.stats_ui(ui);
         }
+
+        // 창 크기를 콘텐츠에 맞게 자동 조정
+        ui.ctx().request_repaint();
     }
 
     fn settings_ui(&mut self, ui: &mut Ui) {
@@ -168,5 +185,9 @@ impl AutoMouseApp {
             ui.label(format!("마지막 동작 시간: {}", 
                 controller.get_last_move_time().format("%H:%M:%S")));
         }
+    }
+    
+    fn should_resize(&self) -> bool {
+        self.is_collapsed != self.last_collapsed_state
     }
 } 

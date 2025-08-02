@@ -88,6 +88,75 @@ impl MouseController {
             }
         }
         
+        #[cfg(unix)]
+        {
+            use x11::xlib::*;
+            use std::ptr;
+            
+            unsafe {
+                // X11 디스플레이 연결
+                let display = XOpenDisplay(ptr::null());
+                if display.is_null() {
+                    return Err(anyhow::anyhow!("X11 디스플레이에 연결할 수 없습니다"));
+                }
+
+                // 현재 마우스 위치 가져오기
+                let mut root_return = 0;
+                let mut child_return = 0;
+                let mut root_x = 0;
+                let mut root_y = 0;
+                let mut win_x = 0;
+                let mut win_y = 0;
+                let mut mask_return = 0;
+
+                let root_window = XDefaultRootWindow(display);
+                XQueryPointer(
+                    display,
+                    root_window,
+                    &mut root_return,
+                    &mut child_return,
+                    &mut root_x,
+                    &mut root_y,
+                    &mut win_x,
+                    &mut win_y,
+                    &mut mask_return,
+                );
+
+                // 마우스를 약간 이동
+                XWarpPointer(
+                    display,
+                    0,
+                    root_window,
+                    0, 0, 0, 0,
+                    root_x + distance,
+                    root_y,
+                );
+                XFlush(display);
+                
+                thread::sleep(Duration::from_millis(100));
+                
+                // 원래 위치로 돌아가기
+                XWarpPointer(
+                    display,
+                    0,
+                    root_window,
+                    0, 0, 0, 0,
+                    root_x,
+                    root_y,
+                );
+                XFlush(display);
+
+                // 디스플레이 연결 해제
+                XCloseDisplay(display);
+            }
+        }
+        
+        #[cfg(not(any(windows, unix)))]
+        {
+            // 지원되지 않는 플랫폼
+            return Err(anyhow::anyhow!("지원되지 않는 플랫폼입니다"));
+        }
+        
         Ok(())
     }
 } 
