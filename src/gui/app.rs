@@ -16,6 +16,9 @@ pub struct AutoMouseApp {
 
     // 타이머 추가
     timer: SimpleTimer,
+    
+    // 최소화 처리를 위한 플래그
+    should_minimize: bool,
 }
 
 impl AutoMouseApp {
@@ -52,6 +55,7 @@ impl AutoMouseApp {
 
         Self {
             mouse_controller,
+            should_minimize: settings.start_minimized,
             settings,
             is_active: false,
             last_activity: Instant::now(),
@@ -94,6 +98,12 @@ impl AutoMouseApp {
 
 impl eframe::App for AutoMouseApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
+        // 첫 번째 업데이트에서 시작 시 최소화 처리
+        if self.should_minimize {
+            ctx.send_viewport_cmd(egui::viewport::ViewportCommand::Minimized(true));
+            self.should_minimize = false;
+        }
+
         self.update_status();
 
         egui::CentralPanel::default().show(ctx, |ui| {
