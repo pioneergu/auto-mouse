@@ -1,3 +1,3 @@
 pub mod controller;
 
-pub use controller::MouseController; 
+pub use controller::MouseController;

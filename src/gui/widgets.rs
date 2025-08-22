@@ -9,4 +9,4 @@ impl StatusWidget {
             text: String::new(),
         }
     }
-} 
+}
